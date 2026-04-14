@@ -117,7 +117,7 @@ function sanitizeImageUrl(value) {
 
   try {
     const parsed = new URL(raw);
-    if (['http:', 'https:', 'data:', 'blob:'].includes(parsed.protocol)) {
+    if (['http:', 'https:'].includes(parsed.protocol)) {
       return raw;
     }
   } catch {
@@ -169,6 +169,8 @@ function createPlayerCard(player, index, animateNew = false) {
 
   const imageElement = card.querySelector('.player-image');
   imageElement.addEventListener('error', () => {
+    if (imageElement.dataset.fallbackApplied === 'true') return;
+    imageElement.dataset.fallbackApplied = 'true';
     imageElement.src = DEFAULT_PLAYER_IMAGE_URL;
   });
 
