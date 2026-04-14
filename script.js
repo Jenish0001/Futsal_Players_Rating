@@ -2,6 +2,7 @@ const STORAGE_KEY = 'futsal_players_v1';
 const STATS = ['PAC', 'SHO', 'PAS', 'DRI', 'DEF', 'PHY'];
 const CARD_ANIMATION_DELAY_MS = 70;
 const SHUFFLE_ANIMATION_DURATION_MS = 500;
+const DEFAULT_POSITION = 'ATT';
 
 const POSITION_WEIGHTS = {
   ATT: { PAC: 0.2, SHO: 0.3, PAS: 0.1, DRI: 0.25, DEF: 0.05, PHY: 0.1 },
@@ -80,7 +81,7 @@ function sanitizePlayer(player) {
 
   const stats = {};
   for (const stat of STATS) {
-    const value = Number(player?.stats?.[stat]);
+    const value = Number(player.stats[stat]);
     if (!Number.isFinite(value)) return null;
     stats[stat] = clamp(Math.round(value), 0, 100);
   }
@@ -278,7 +279,7 @@ addPlayerForm.addEventListener('submit', (event) => {
   renderPlayerCards({ animateNewId: newPlayer.id });
 
   addPlayerForm.reset();
-  addPlayerForm.position.value = 'ATT';
+  addPlayerForm.position.value = DEFAULT_POSITION;
   showMessage(`Added ${name} successfully.`, 'success');
 });
 
