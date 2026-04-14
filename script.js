@@ -1,5 +1,7 @@
 const STORAGE_KEY = 'futsal_players_v1';
 const STATS = ['PAC', 'SHO', 'PAS', 'DRI', 'DEF', 'PHY'];
+const CARD_ANIMATION_DELAY_MS = 70;
+const SHUFFLE_ANIMATION_DURATION_MS = 500;
 
 const POSITION_WEIGHTS = {
   ATT: { PAC: 0.2, SHO: 0.3, PAS: 0.1, DRI: 0.25, DEF: 0.05, PHY: 0.1 },
@@ -97,7 +99,7 @@ function createPlayerCard(player, index, animateNew = false) {
   card.dataset.id = player.id;
 
   const rating = calculateWeightedRating(player.position, player.stats);
-  card.style.animationDelay = `${index * 70}ms`;
+  card.style.animationDelay = `${index * CARD_ANIMATION_DELAY_MS}ms`;
   if (animateNew) {
     card.style.animationDelay = '0ms';
   }
@@ -153,12 +155,12 @@ function shufflePlayers(list) {
 function splitTeams(selectedPlayers) {
   const shuffled = shufflePlayers(selectedPlayers);
   const baseSize = Math.floor(shuffled.length / 2);
-  const odd = shuffled.length % 2;
+  const remainder = shuffled.length % 2;
 
   let teamASize = baseSize;
   let teamBSize = baseSize;
 
-  if (odd) {
+  if (remainder) {
     if (Math.random() < 0.5) {
       teamASize += 1;
     } else {
@@ -181,7 +183,7 @@ function animatePreShuffle(selectedIds) {
     setTimeout(() => {
       cards.forEach((card) => card.classList.remove('shuffling'));
       resolve();
-    }, 500);
+    }, SHUFFLE_ANIMATION_DURATION_MS);
   });
 }
 
@@ -226,7 +228,9 @@ function escapeHtml(value) {
 }
 
 function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
 }
 
 addPlayerForm.addEventListener('submit', (event) => {
