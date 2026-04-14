@@ -1179,35 +1179,30 @@
         const el = grid.querySelector(`[data-id="${p.id}"]`);
         if (!el) return;
         el.classList.remove('shuffle-anim', 'team-a-anim', 'team-b-anim');
-        void el.offsetWidth; // reflow
+        // Force style recalculation so removing + re-adding the class restarts the animation
+        void el.offsetWidth;
         el.classList.add('shuffle-anim');
       });
 
-      // 2. After shuffle anim → split
+      // 2. After shuffle animation completes → split into teams
       setTimeout(() => {
         const shuffled = shuffleArray(selectedPlayers);
         const half = Math.floor(shuffled.length / 2);
-        const extra = shuffled.length % 2 === 1 ? (Math.random() < 0.5 ? 0 : 1) : -1;
 
-        const teamA = [];
-        const teamB = [];
+        // For an odd number of players, randomly decide which team gets the extra player
+        const teamASize = shuffled.length % 2 === 1 && Math.random() < 0.5
+          ? half + 1
+          : half;
 
-        shuffled.forEach((p, i) => {
-          if (i < half) {
-            teamA.push(p);
-          } else if (i < half * 2) {
-            teamB.push(p);
-          } else {
-            // odd player
-            (extra === 0 ? teamA : teamB).push(p);
-          }
-        });
+        const teamA = shuffled.slice(0, teamASize);
+        const teamB = shuffled.slice(teamASize);
 
-        // Slide animations
+        // Slide animations: Team A → left, Team B → right
         teamA.forEach(p => {
           const el = grid.querySelector(`[data-id="${p.id}"]`);
           if (!el) return;
           el.classList.remove('shuffle-anim');
+          // Force style recalculation so the new animation class takes effect immediately
           void el.offsetWidth;
           el.classList.add('team-a-anim');
         });
@@ -1216,13 +1211,13 @@
           const el = grid.querySelector(`[data-id="${p.id}"]`);
           if (!el) return;
           el.classList.remove('shuffle-anim');
+          // Force style recalculation so the new animation class takes effect immediately
           void el.offsetWidth;
           el.classList.add('team-b-anim');
         });
 
-        // 3. Show team results panel
+        // 3. After slide animations complete → render team results panel
         setTimeout(() => {
-          // Remove slide anims
           [...teamA, ...teamB].forEach(p => {
             const el = grid.querySelector(`[data-id="${p.id}"]`);
             if (el) el.classList.remove('team-a-anim', 'team-b-anim');
