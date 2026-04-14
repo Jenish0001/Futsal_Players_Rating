@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Futsal Players Rating</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #ffd700;
+      --gold-light:  #ffe866;
+      --gold-dark:   #b8860b;
+      --gold-muted:  #c9a227;
+      --bg-dark:     #0d0d0d;
+      --bg-card:     #1a1400;
+      --bg-panel:    #111108;
+      --text-main:   #f5e6a3;
+      --text-dim:    #9a8a50;
+      --accent-red:  #e63946;
+      --accent-blue: #457b9d;
+      --radius:      12px;
+      --shadow-gold: 0 0 18px 4px rgba(255,215,0,0.35);
+      --transition:  0.3s ease;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      text-align: center;
+      padding: 2.5rem 1rem 1.5rem;
+      background: linear-gradient(180deg, #1a1200 0%, transparent 100%);
+      border-bottom: 1px solid rgba(255,215,0,0.15);
+      position: relative;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,215,0,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .logo {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      position: relative;
+    }
+
+    .tagline {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    /* ===== LAYOUT ===== */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem;
+    }
+
+    /* ===== CONTROLS BAR ===== */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      padding: 1rem 1.2rem;
+      background: var(--bg-panel);
+      border: 1px solid rgba(255,215,0,0.12);
+      border-radius: var(--radius);
+    }
+
+    .controls-bar .left-group,
+    .controls-bar .right-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .selection-count {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .selection-count span {
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1.1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.08);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover::after { opacity: 1; }
+    .btn:active { transform: scale(0.96); }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 60%, var(--gold-dark) 100%);
+      color: #1a1000;
+      box-shadow: 0 2px 10px rgba(255,215,0,0.3);
+    }
+
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(255,215,0,0.5);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--gold);
+      border: 1.5px solid var(--gold-dark);
+    }
+
+    .btn-outline:hover {
+      background: rgba(255,215,0,0.08);
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: #ff6b6b;
+      border: 1.5px solid rgba(230,57,70,0.4);
+    }
+
+    .btn-danger:hover {
+      background: rgba(230,57,70,0.12);
+      border-color: var(--accent-red);
+    }
+
+    /* ===== ADD PLAYER SECTION ===== */
+    .add-player-section {
+      background: var(--bg-panel);
+      border: 1px solid rgba(255,215,0,0.12);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      transition: max-height 0.4s ease, opacity 0.4s ease;
+    }
+
+    .add-player-section.collapsed {
+      max-height: 0;
+      opacity: 0;
+      border-color: transparent;
+    }
+
+    .add-player-section.expanded {
+      max-height: 600px;
+      opacity: 1;
+    }
+
+    .add-player-inner {
+      padding: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 3px;
+      height: 1em;
+      background: var(--gold);
+      border-radius: 2px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .form-group label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .form-group input,
+    .form-group select {
+      background: #1e1800;
+      border: 1.5px solid rgba(255,215,0,0.2);
+      border-radius: 6px;
+      color: var(--text-main);
+      padding: 0.45rem 0.7rem;
+      font-size: 0.9rem;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      outline: none;
+      width: 100%;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(255,215,0,0.12);
+    }
+
+    .form-group input::placeholder { color: #4a3e1a; }
+
+    .form-group select option {
+      background: #1a1400;
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+
+    .form-error {
+      color: var(--accent-red);
+      font-size: 0.8rem;
+      display: none;
+    }
+
+    .form-error.visible { display: block; }
+
+    /* ===== CARDS GRID ===== */
+    .cards-section {
+      position: relative;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ===== PLAYER CARD ===== */
+    .player-card {
+      position: relative;
+      background: linear-gradient(160deg, #2a1e00 0%, #1a1200 40%, #0f0c00 100%);
+      border: 1.5px solid rgba(255,215,0,0.25);
+      border-radius: var(--radius);
+      padding: 1.1rem 1rem 1rem;
+      cursor: pointer;
+      user-select: none;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+      overflow: hidden;
+
+      /* page-load animation */
+      animation: cardFadeIn 0.5s ease both;
+    }
+
+    .player-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(255,215,0,0.04) 60deg,
+        transparent 120deg
+      );
+      pointer-events: none;
+    }
+
+    /* Shimmer line */
+    .player-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,215,0,0.06), transparent);
+      transform: skewX(-20deg);
+      transition: left 0.6s ease;
+      pointer-events: none;
+    }
+
+    .player-card:hover::after { left: 160%; }
+
+    .player-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: var(--shadow-gold), 0 12px 30px rgba(0,0,0,0.6);
+      border-color: rgba(255,215,0,0.7);
+      z-index: 2;
+    }
+
+    .player-card.selected {
+      border-color: var(--gold);
+      box-shadow: var(--shadow-gold), 0 0 0 2px var(--gold);
+      animation: selectedPulse 2s ease-in-out infinite, cardFadeIn 0s;
+    }
+
+    .player-card.selected::before {
+      background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(255,215,0,0.08) 60deg,
+        transparent 120deg
+      );
+    }
+
+    .player-card.shuffle-anim {
+      animation: shuffleMove 0.5s ease both !important;
+    }
+
+    .player-card.team-a-anim {
+      animation: slideLeft 0.5s ease both !important;
+    }
+
+    .player-card.team-b-anim {
+      animation: slideRight 0.5s ease both !important;
+    }
+
+    .player-card.add-anim {
+      animation: cardAddIn 0.5s ease both !important;
+    }
+
+    /* Card header */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.6rem;
+    }
+
+    .card-rating {
+      font-size: 2.2rem;
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .card-pos-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.3rem;
+    }
+
+    .card-position {
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: var(--gold-dark);
+      background: rgba(255,215,0,0.1);
+      border: 1px solid rgba(255,215,0,0.25);
+      border-radius: 4px;
+      padding: 0.1rem 0.45rem;
+    }
+
+    /* Selected check */
+    .card-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      color: #1a1000;
+      font-weight: 900;
+      opacity: 0;
+      transform: scale(0);
+      transition: opacity 0.25s, transform 0.25s;
+    }
+
+    .player-card.selected .card-check {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Card name */
+    .card-name {
+      font-size: 1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gold-light);
+      text-shadow: 0 0 10px rgba(255,215,0,0.3);
+      margin-bottom: 0.8rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Divider */
+    .card-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent);
+      margin-bottom: 0.8rem;
+    }
+
+    /* Stats grid */
+    .card-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.45rem 0.3rem;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.1rem;
+    }
+
+    .stat-val {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--gold-light);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Corner ornament */
+    .card-corner {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      width: 18px;
+      height: 18px;
+      opacity: 0.12;
+    }
+
+    .card-corner svg { width: 100%; height: 100%; fill: var(--gold); }
+
+    /* ===== TEAM RESULTS ===== */
+    .teams-section {
+      margin-top: 2rem;
+      display: none;
+    }
+
+    .teams-section.visible {
+      display: block;
+      animation: fadeInUp 0.4s ease both;
+    }
+
+    .teams-section-title {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 1.2rem;
+      position: relative;
+    }
+
+    .teams-section-title::after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 2px;
+      background: var(--gold);
+      margin: 0.4rem auto 0;
+      border-radius: 2px;
+    }
+
+    .teams-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 600px) {
+      .teams-grid { grid-template-columns: 1fr; }
+    }
+
+    .team-panel {
+      background: var(--bg-panel);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .team-a .team-header { background: linear-gradient(90deg, #c00, #800); }
+    .team-b .team-header { background: linear-gradient(90deg, #004c8c, #002b5c); }
+
+    .team-header {
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .team-avg {
+      font-size: 0.75rem;
+      opacity: 0.85;
+      font-weight: 600;
+    }
+
+    .team-players-list {
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .team-player-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,215,0,0.04);
+      border: 1px solid rgba(255,215,0,0.1);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      animation: fadeInUp 0.3s ease both;
+    }
+
+    .team-player-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .team-player-meta {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .team-player-rating {
+      color: var(--gold);
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-dim);
+      display: none;
+    }
+
+    .empty-state.visible { display: block; }
+
+    .empty-state-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+
+    /* ===== FILTER BAR ===== */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .filter-btn {
+      padding: 0.3rem 0.9rem;
+      border-radius: 20px;
+      border: 1.5px solid rgba(255,215,0,0.2);
+      background: transparent;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: rgba(255,215,0,0.12);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* ===== TOAST ===== */
+    #toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #1e1800;
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 8px;
+      padding: 0.65rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      animation: toastIn 0.3s ease both;
+      min-width: 200px;
+      max-width: 300px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toast.success { border-color: rgba(80, 200, 80, 0.4); }
+    .toast.error   { border-color: rgba(230, 57, 70, 0.5); }
+
+    .toast.fade-out { animation: toastOut 0.3s ease both; }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes cardFadeIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes cardAddIn {
+      0%   { opacity: 0; transform: translateY(30px) scale(0.88); }
+      60%  { transform: translateY(-6px) scale(1.03); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes selectedPulse {
+      0%, 100% { box-shadow: var(--shadow-gold), 0 0 0 2px var(--gold); }
+      50%       { box-shadow: 0 0 28px 8px rgba(255,215,0,0.55), 0 0 0 3px var(--gold-light); }
+    }
+
+    @keyframes shuffleMove {
+      0%   { transform: translate(0, 0) rotate(0deg); }
+      20%  { transform: translate(-8px, -6px) rotate(-2deg); }
+      40%  { transform: translate(6px, 8px) rotate(2deg); }
+      60%  { transform: translate(-5px, 4px) rotate(-1deg); }
+      80%  { transform: translate(4px, -5px) rotate(1deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+
+    @keyframes slideLeft {
+      from { transform: translateX(0); opacity: 1; }
+      to   { transform: translateX(-60px); opacity: 0.6; }
+    }
+
+    @keyframes slideRight {
+      from { transform: translateX(0); opacity: 1; }
+      to   { transform: translateX(60px); opacity: 0.6; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateX(0); }
+      to   { opacity: 0; transform: translateX(30px); }
+    }
+
+    /* ===== STAGGER ANIMATION (JS sets --i) ===== */
+    .player-card { animation-delay: calc(var(--i, 0) * 0.07s); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+      .cards-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+      .card-rating { font-size: 1.8rem; }
+    }
+
+    @media (max-width: 360px) {
+      .cards-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-dark); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.25); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,215,0,0.45); }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">⚽ Futsal Players Rating</div>
+    <p class="tagline">Build your squad &bull; Rate your players &bull; Split teams</p>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <div class="container">
+
+    <!-- CONTROLS BAR -->
+    <div class="controls-bar">
+      <div class="left-group">
+        <button class="btn btn-gold" id="btn-toggle-add">
+          <span>＋</span> Add Player
+        </button>
+        <button class="btn btn-outline" id="btn-select-all">Select All</button>
+        <button class="btn btn-outline" id="btn-deselect-all">Deselect All</button>
+        <button class="btn btn-danger"  id="btn-reset">Reset Players</button>
+      </div>
+      <div class="right-group">
+        <span class="selection-count">Selected: <span id="selected-count">0</span></span>
+        <button class="btn btn-gold" id="btn-split">⚡ Split Teams</button>
+      </div>
+    </div>
+
+    <!-- ADD PLAYER FORM -->
+    <div class="add-player-section collapsed" id="add-player-section">
+      <div class="add-player-inner">
+        <div class="section-title">New Player</div>
+        <form id="add-player-form" autocomplete="off">
+          <div class="form-grid">
+            <div class="form-group" style="grid-column: span 2;">
+              <label for="f-name">Player Name</label>
+              <input type="text" id="f-name" placeholder="Enter name" maxlength="30" />
+            </div>
+            <div class="form-group">
+              <label for="f-pos">Position</label>
+              <select id="f-pos">
+                <option value="ATT">ATT – Attacker</option>
+                <option value="MID">MID – Midfielder</option>
+                <option value="DEF">DEF – Defender</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="f-pac">PAC (Pace)</label>
+              <input type="number" id="f-pac" placeholder="0–100" min="0" max="100" />
+            </div>
+            <div class="form-group">
+              <label for="f-sho">SHO (Shooting)</label>
+              <input type="number" id="f-sho" placeholder="0–100" min="0" max="100" />
+            </div>
+            <div class="form-group">
+              <label for="f-pas">PAS (Passing)</label>
+              <input type="number" id="f-pas" placeholder="0–100" min="0" max="100" />
+            </div>
+            <div class="form-group">
+              <label for="f-dri">DRI (Dribbling)</label>
+              <input type="number" id="f-dri" placeholder="0–100" min="0" max="100" />
+            </div>
+            <div class="form-group">
+              <label for="f-def">DEF (Defense)</label>
+              <input type="number" id="f-def" placeholder="0–100" min="0" max="100" />
+            </div>
+            <div class="form-group">
+              <label for="f-phy">PHY (Physical)</label>
+              <input type="number" id="f-phy" placeholder="0–100" min="0" max="100" />
+            </div>
+          </div>
+          <div class="form-row">
+            <button type="submit" class="btn btn-gold">Add Player</button>
+            <button type="button" class="btn btn-outline" id="btn-cancel-add">Cancel</button>
+            <span class="form-error" id="form-error"></span>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="ALL">All</button>
+      <button class="filter-btn" data-filter="ATT">ATT</button>
+      <button class="filter-btn" data-filter="MID">MID</button>
+      <button class="filter-btn" data-filter="DEF">DEF</button>
+    </div>
+
+    <!-- CARDS SECTION -->
+    <div class="cards-section">
+      <div class="cards-grid" id="cards-grid"></div>
+      <div class="empty-state" id="empty-state">
+        <div class="empty-state-icon">🏆</div>
+        <p>No players found.<br/>Add some players to get started!</p>
+      </div>
+    </div>
+
+    <!-- TEAMS SECTION -->
+    <div class="teams-section" id="teams-section">
+      <div class="teams-section-title">⚡ Team Split</div>
+      <div class="teams-grid">
+        <div class="team-panel team-a">
+          <div class="team-header">
+            <span>🔴 Team A</span>
+            <span class="team-avg" id="team-a-avg"></span>
+          </div>
+          <div class="team-players-list" id="team-a-list"></div>
+        </div>
+        <div class="team-panel team-b">
+          <div class="team-header">
+            <span>🔵 Team B</span>
+            <span class="team-avg" id="team-b-avg"></span>
+          </div>
+          <div class="team-players-list" id="team-b-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .container -->
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <script>
+    /* =====================================================
+       CONSTANTS & WEIGHTS
+    ===================================================== */
+    const STORAGE_KEY = 'futsal_players_v1';
+
+    const WEIGHTS = {
+      ATT: { pac: 0.20, sho: 0.30, pas: 0.10, dri: 0.25, def: 0.05, phy: 0.10 },
+      MID: { pac: 0.15, sho: 0.15, pas: 0.25, dri: 0.20, def: 0.10, phy: 0.15 },
+      DEF: { pac: 0.15, sho: 0.05, pas: 0.15, dri: 0.10, def: 0.30, phy: 0.25 },
+    };
+
+    const DEFAULT_PLAYERS = [
+      { name: 'Pritam',  position: 'ATT', stats: { pac: 82, sho: 78, pas: 70, dri: 80, def: 30, phy: 72 } },
+      { name: 'Milan',   position: 'MID', stats: { pac: 74, sho: 68, pas: 80, dri: 75, def: 55, phy: 70 } },
+      { name: 'Suman',   position: 'DEF', stats: { pac: 65, sho: 40, pas: 62, dri: 55, def: 82, phy: 80 } },
+      { name: 'Jenish',  position: 'ATT', stats: { pac: 88, sho: 83, pas: 67, dri: 85, def: 28, phy: 68 } },
+      { name: 'Avinab',  position: 'MID', stats: { pac: 70, sho: 65, pas: 78, dri: 72, def: 60, phy: 65 } },
+      { name: 'Ajmon',   position: 'DEF', stats: { pac: 62, sho: 38, pas: 58, dri: 52, def: 85, phy: 84 } },
+      { name: 'Sujan',   position: 'MID', stats: { pac: 76, sho: 72, pas: 76, dri: 74, def: 52, phy: 68 } },
+      { name: 'Arpan',   position: 'ATT', stats: { pac: 80, sho: 76, pas: 65, dri: 78, def: 32, phy: 70 } },
+      { name: 'Gaurav',  position: 'DEF', stats: { pac: 68, sho: 42, pas: 60, dri: 58, def: 80, phy: 82 } },
+    ];
+
+    /* =====================================================
+       STATE
+    ===================================================== */
+    let players = [];           // single source of truth
+    let selectedIds = new Set();
+    let currentFilter = 'ALL';
+
+    /* =====================================================
+       LOCAL STORAGE
+    ===================================================== */
+    function loadPlayers() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (_) { /* ignore */ }
+      return null;
+    }
+
+    function savePlayers() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+      } catch (_) { /* ignore */ }
+    }
+
+    /* =====================================================
+       RATING CALCULATION
+    ===================================================== */
+    function calcRating(position, stats) {
+      const w = WEIGHTS[position] || WEIGHTS.MID;
+      const raw = (
+        stats.pac * w.pac +
+        stats.sho * w.sho +
+        stats.pas * w.pas +
+        stats.dri * w.dri +
+        stats.def * w.def +
+        stats.phy * w.phy
+      );
+      return Math.round(raw);
+    }
+
+    /* =====================================================
+       PLAYER ID GENERATION
+    ===================================================== */
+    function makeId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    /* =====================================================
+       INIT PLAYERS
+    ===================================================== */
+    function initPlayers() {
+      const stored = loadPlayers();
+      if (stored) {
+        players = stored;
+      } else {
+        players = DEFAULT_PLAYERS.map(p => ({
+          id: makeId(),
+          name: p.name,
+          position: p.position,
+          stats: { ...p.stats },
+        }));
+        savePlayers();
+      }
+    }
+
+    /* =====================================================
+       RENDER CARDS
+    ===================================================== */
+    function getFilteredPlayers() {
+      if (currentFilter === 'ALL') return players;
+      return players.filter(p => p.position === currentFilter);
+    }
+
+    function renderCards(animateNew = null) {
+      const grid = document.getElementById('cards-grid');
+      const filtered = getFilteredPlayers();
+
+      // Update empty state
+      document.getElementById('empty-state').classList.toggle('visible', filtered.length === 0);
+
+      // Remove cards not in filtered set
+      const existingCards = new Map();
+      grid.querySelectorAll('.player-card').forEach(el => {
+        existingCards.set(el.dataset.id, el);
+      });
+
+      // Remove cards that no longer match filter
+      existingCards.forEach((el, id) => {
+        if (!filtered.find(p => p.id === id)) {
+          el.remove();
+        }
+      });
+
+      // Insert / update cards
+      filtered.forEach((player, index) => {
+        const existing = existingCards.get(player.id);
+        if (existing) {
+          // Update selection state only
+          existing.classList.toggle('selected', selectedIds.has(player.id));
+          existing.style.setProperty('--i', index);
+        } else {
+          const card = buildCard(player, index, player.id === animateNew);
+          grid.appendChild(card);
+        }
+      });
+
+      updateSelectionCount();
+    }
+
+    function buildCard(player, index, isNew = false) {
+      const rating = calcRating(player.position, player.stats);
+      const el = document.createElement('div');
+      el.className = 'player-card' + (selectedIds.has(player.id) ? ' selected' : '');
+      if (isNew) el.classList.add('add-anim');
+      el.dataset.id = player.id;
+      el.style.setProperty('--i', index);
+
+      el.innerHTML = `
+        <div class="card-header">
+          <div class="card-rating">${rating}</div>
+          <div class="card-pos-block">
+            <div class="card-position">${player.position}</div>
+            <div class="card-check">✓</div>
+          </div>
+        </div>
+        <div class="card-name">${escHtml(player.name)}</div>
+        <div class="card-divider"></div>
+        <div class="card-stats">
+          <div class="stat-item"><div class="stat-val">${player.stats.pac}</div><div class="stat-label">PAC</div></div>
+          <div class="stat-item"><div class="stat-val">${player.stats.sho}</div><div class="stat-label">SHO</div></div>
+          <div class="stat-item"><div class="stat-val">${player.stats.pas}</div><div class="stat-label">PAS</div></div>
+          <div class="stat-item"><div class="stat-val">${player.stats.dri}</div><div class="stat-label">DRI</div></div>
+          <div class="stat-item"><div class="stat-val">${player.stats.def}</div><div class="stat-label">DEF</div></div>
+          <div class="stat-item"><div class="stat-val">${player.stats.phy}</div><div class="stat-label">PHY</div></div>
+        </div>
+        <div class="card-corner">
+          <svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        </div>
+      `;
+
+      el.addEventListener('click', () => toggleSelection(player.id, el));
+      return el;
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /* =====================================================
+       SELECTION
+    ===================================================== */
+    function toggleSelection(id, el) {
+      if (selectedIds.has(id)) {
+        selectedIds.delete(id);
+        el.classList.remove('selected');
+      } else {
+        selectedIds.add(id);
+        el.classList.add('selected');
+      }
+      updateSelectionCount();
+    }
+
+    function updateSelectionCount() {
+      document.getElementById('selected-count').textContent = selectedIds.size;
+    }
+
+    function selectAll() {
+      getFilteredPlayers().forEach(p => selectedIds.add(p.id));
+      renderCards();
+    }
+
+    function deselectAll() {
+      selectedIds.clear();
+      renderCards();
+    }
+
+    /* =====================================================
+       ADD PLAYER
+    ===================================================== */
+    function toggleAddForm(show) {
+      const section = document.getElementById('add-player-section');
+      if (show) {
+        section.classList.remove('collapsed');
+        section.classList.add('expanded');
+        document.getElementById('f-name').focus();
+      } else {
+        section.classList.add('collapsed');
+        section.classList.remove('expanded');
+        document.getElementById('add-player-form').reset();
+        hideFormError();
+      }
+    }
+
+    function showFormError(msg) {
+      const el = document.getElementById('form-error');
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+
+    function hideFormError() {
+      document.getElementById('form-error').classList.remove('visible');
+    }
+
+    function getStatValue(id) {
+      const val = parseInt(document.getElementById(id).value, 10);
+      return isNaN(val) ? null : val;
+    }
+
+    function handleAddPlayer(e) {
+      e.preventDefault();
+      hideFormError();
+
+      const name = document.getElementById('f-name').value.trim();
+      if (!name) { showFormError('Player name is required.'); return; }
+
+      const position = document.getElementById('f-pos').value;
+      const statIds = ['f-pac', 'f-sho', 'f-pas', 'f-dri', 'f-def', 'f-phy'];
+      const statKeys = ['pac', 'sho', 'pas', 'dri', 'def', 'phy'];
+      const stats = {};
+
+      for (let i = 0; i < statIds.length; i++) {
+        const v = getStatValue(statIds[i]);
+        if (v === null || v < 0 || v > 100) {
+          showFormError(`${statKeys[i].toUpperCase()} must be a number between 0 and 100.`);
+          return;
+        }
+        stats[statKeys[i]] = v;
+      }
+
+      const newPlayer = { id: makeId(), name, position, stats };
+      players.push(newPlayer);
+      savePlayers();
+
+      // Reset filter to ALL so new card is visible
+      currentFilter = 'ALL';
+      updateFilterButtons();
+
+      renderCards(newPlayer.id);
+      toggleAddForm(false);
+      showToast(`${name} added to the squad!`, 'success');
+    }
+
+    /* =====================================================
+       FILTER
+    ===================================================== */
+    function updateFilterButtons() {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === currentFilter);
+      });
+    }
+
+    /* =====================================================
+       SHUFFLE & SPLIT
+    ===================================================== */
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function splitTeams() {
+      const selectedPlayers = players.filter(p => selectedIds.has(p.id));
+
+      if (selectedPlayers.length < 2) {
+        showToast('Select at least 2 players to split teams.', 'error');
+        return;
+      }
+
+      // 1. Shuffle animation on selected cards
+      const grid = document.getElementById('cards-grid');
+      selectedPlayers.forEach(p => {
+        const el = grid.querySelector(`[data-id="${p.id}"]`);
+        if (!el) return;
+        el.classList.remove('shuffle-anim', 'team-a-anim', 'team-b-anim');
+        void el.offsetWidth; // reflow
+        el.classList.add('shuffle-anim');
+      });
+
+      // 2. After shuffle anim → split
+      setTimeout(() => {
+        const shuffled = shuffleArray(selectedPlayers);
+        const half = Math.floor(shuffled.length / 2);
+        const extra = shuffled.length % 2 === 1 ? (Math.random() < 0.5 ? 0 : 1) : -1;
+
+        const teamA = [];
+        const teamB = [];
+
+        shuffled.forEach((p, i) => {
+          if (i < half) {
+            teamA.push(p);
+          } else if (i < half * 2) {
+            teamB.push(p);
+          } else {
+            // odd player
+            (extra === 0 ? teamA : teamB).push(p);
+          }
+        });
+
+        // Slide animations
+        teamA.forEach(p => {
+          const el = grid.querySelector(`[data-id="${p.id}"]`);
+          if (!el) return;
+          el.classList.remove('shuffle-anim');
+          void el.offsetWidth;
+          el.classList.add('team-a-anim');
+        });
+
+        teamB.forEach(p => {
+          const el = grid.querySelector(`[data-id="${p.id}"]`);
+          if (!el) return;
+          el.classList.remove('shuffle-anim');
+          void el.offsetWidth;
+          el.classList.add('team-b-anim');
+        });
+
+        // 3. Show team results panel
+        setTimeout(() => {
+          // Remove slide anims
+          [...teamA, ...teamB].forEach(p => {
+            const el = grid.querySelector(`[data-id="${p.id}"]`);
+            if (el) el.classList.remove('team-a-anim', 'team-b-anim');
+          });
+
+          renderTeams(teamA, teamB);
+        }, 600);
+
+      }, 600);
+    }
+
+    function avgRating(players) {
+      if (!players.length) return 0;
+      const sum = players.reduce((acc, p) => acc + calcRating(p.position, p.stats), 0);
+      return Math.round(sum / players.length);
+    }
+
+    function renderTeams(teamA, teamB) {
+      const section = document.getElementById('teams-section');
+      const listA = document.getElementById('team-a-list');
+      const listB = document.getElementById('team-b-list');
+
+      listA.innerHTML = '';
+      listB.innerHTML = '';
+
+      const makeRow = (player) => {
+        const rating = calcRating(player.position, player.stats);
+        const row = document.createElement('div');
+        row.className = 'team-player-row';
+        row.innerHTML = `
+          <span class="team-player-name">${escHtml(player.name)}</span>
+          <span class="team-player-meta">
+            <span>${player.position}</span>
+            <span class="team-player-rating">${rating}</span>
+          </span>
+        `;
+        return row;
+      };
+
+      teamA.forEach((p, i) => {
+        const row = makeRow(p);
+        row.style.animationDelay = `${i * 0.06}s`;
+        listA.appendChild(row);
+      });
+
+      teamB.forEach((p, i) => {
+        const row = makeRow(p);
+        row.style.animationDelay = `${i * 0.06}s`;
+        listB.appendChild(row);
+      });
+
+      document.getElementById('team-a-avg').textContent = `Avg: ${avgRating(teamA)}`;
+      document.getElementById('team-b-avg').textContent = `Avg: ${avgRating(teamB)}`;
+
+      section.classList.add('visible');
+      section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    /* =====================================================
+       RESET
+    ===================================================== */
+    function resetPlayers() {
+      if (!confirm('Reset all players to default? This cannot be undone.')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      selectedIds.clear();
+      players = DEFAULT_PLAYERS.map(p => ({
+        id: makeId(),
+        name: p.name,
+        position: p.position,
+        stats: { ...p.stats },
+      }));
+      savePlayers();
+      currentFilter = 'ALL';
+      updateFilterButtons();
+      document.getElementById('teams-section').classList.remove('visible');
+      document.getElementById('cards-grid').innerHTML = '';
+      renderCards();
+      showToast('Players reset to default.', 'success');
+    }
+
+    /* =====================================================
+       TOAST
+    ===================================================== */
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+      toast.textContent = `${icon} ${msg}`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        toast.addEventListener('animationend', () => toast.remove());
+      }, 3000);
+    }
+
+    /* =====================================================
+       EVENT LISTENERS
+    ===================================================== */
+    document.getElementById('btn-toggle-add').addEventListener('click', () => {
+      const section = document.getElementById('add-player-section');
+      const isOpen = section.classList.contains('expanded');
+      toggleAddForm(!isOpen);
+    });
+
+    document.getElementById('btn-cancel-add').addEventListener('click', () => toggleAddForm(false));
+    document.getElementById('add-player-form').addEventListener('submit', handleAddPlayer);
+    document.getElementById('btn-split').addEventListener('click', splitTeams);
+    document.getElementById('btn-select-all').addEventListener('click', selectAll);
+    document.getElementById('btn-deselect-all').addEventListener('click', deselectAll);
+    document.getElementById('btn-reset').addEventListener('click', resetPlayers);
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentFilter = btn.dataset.filter;
+        updateFilterButtons();
+        renderCards();
+      });
+    });
+
+    /* =====================================================
+       BOOTSTRAP
+    ===================================================== */
+    initPlayers();
+    renderCards();
+  </script>
+</body>
+</html>
