@@ -92,7 +92,7 @@ function sanitizePlayer(player) {
   const name = String(player.name || '').trim();
   const position = String(player.position || '').toUpperCase();
   if (!name || !POSITION_WEIGHTS[position]) return null;
-  if (!player.stats || typeof player.stats !== 'object') return null;
+  if (!player.stats || typeof player.stats !== 'object' || Array.isArray(player.stats)) return null;
 
   const stats = {};
   for (const stat of STATS) {
@@ -147,7 +147,9 @@ function createPlayerCard(player, index, animateNew = false) {
       <img
         class="player-image"
         src="${escapeHtml(player.imageUrl)}"
-        alt="${escapeHtml(player.name)} portrait"
+        alt="${escapeHtml(
+          player.imageUrl === DEFAULT_PLAYER_IMAGE_URL ? 'Default player avatar' : `${player.name} portrait`
+        )}"
         loading="lazy"
         referrerpolicy="no-referrer"
       />
