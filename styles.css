@@ -9,6 +9,10 @@
   --gold-3: #7f5d14;
   --success: #88f4ba;
   --danger: #ffa4a4;
+  --shuffle-x: 6px;
+  --shuffle-y-up: -3px;
+  --shuffle-y-down: 2px;
+  --shuffle-rotate: 1.6deg;
 }
 
 * {
@@ -337,10 +341,11 @@ select:focus {
     transform: translateX(0) translateY(0) rotate(0deg);
   }
   25% {
-    transform: translateX(-6px) translateY(-3px) rotate(-1.6deg);
+    transform: translateX(calc(var(--shuffle-x) * -1)) translateY(var(--shuffle-y-up))
+      rotate(calc(var(--shuffle-rotate) * -1));
   }
   50% {
-    transform: translateX(6px) translateY(2px) rotate(1.6deg);
+    transform: translateX(var(--shuffle-x)) translateY(var(--shuffle-y-down)) rotate(var(--shuffle-rotate));
   }
   100% {
     transform: translateX(0) translateY(0) rotate(0deg);

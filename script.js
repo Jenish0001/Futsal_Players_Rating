@@ -1,5 +1,13 @@
 const STORAGE_KEY = 'futsal_players_v1';
 const STATS = ['PAC', 'SHO', 'PAS', 'DRI', 'DEF', 'PHY'];
+const STAT_LABELS = {
+  PAC: 'Pace (PAC)',
+  SHO: 'Shooting (SHO)',
+  PAS: 'Passing (PAS)',
+  DRI: 'Dribbling (DRI)',
+  DEF: 'Defense (DEF)',
+  PHY: 'Physical (PHY)',
+};
 const CARD_ANIMATION_DELAY_MS = 70;
 const SHUFFLE_ANIMATION_DURATION_MS = 500;
 
@@ -145,6 +153,7 @@ function handleSelection(playerId) {
 
 function shufflePlayers(list) {
   const arr = [...list];
+  // Fisher-Yates shuffle for unbiased random ordering.
   for (let i = arr.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -261,7 +270,7 @@ addPlayerForm.addEventListener('submit', (event) => {
 
   for (const stat of STATS) {
     if (!validateStat(stats[stat])) {
-      showMessage(`Invalid ${stat}. Enter an integer between 0 and 100.`, 'error');
+      showMessage(`Invalid ${STAT_LABELS[stat]}. Enter an integer between 0 and 100.`, 'error');
       return;
     }
   }
