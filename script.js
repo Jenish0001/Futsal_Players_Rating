@@ -10,6 +10,9 @@ const STAT_LABELS = {
 };
 const CARD_ANIMATION_DELAY_MS = 70;
 const SHUFFLE_ANIMATION_DURATION_MS = 500;
+const DEFAULT_PLAYER_IMAGE_URL = `data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><defs><linearGradient id="bg" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#2a344a"/><stop offset="100%" stop-color="#111827"/></linearGradient></defs><rect width="240" height="240" fill="url(#bg)"/><circle cx="120" cy="90" r="46" fill="#c9d0de"/><path d="M42 220c8-42 38-66 78-66s70 24 78 66" fill="#c9d0de"/></svg>'
+)}`;
 
 const POSITION_WEIGHTS = {
   ATT: { PAC: 0.2, SHO: 0.3, PAS: 0.1, DRI: 0.25, DEF: 0.05, PHY: 0.1 },
@@ -27,10 +30,14 @@ const defaultPlayers = [
   { name: 'Sujan', position: 'ATT', stats: { PAC: 83, SHO: 79, PAS: 69, DRI: 82, DEF: 34, PHY: 70 } },
   { name: 'Arpan', position: 'MID', stats: { PAC: 75, SHO: 71, PAS: 82, DRI: 77, DEF: 64, PHY: 73 } },
   { name: 'Gaurav', position: 'DEF', stats: { PAC: 69, SHO: 48, PAS: 67, DRI: 60, DEF: 82, PHY: 84 } },
-].map((player) => ({ ...player, id: crypto.randomUUID() }));
+].map((player) => ({
+  ...player,
+  id: crypto.randomUUID(),
+  imageUrl: DEFAULT_PLAYER_IMAGE_URL,
+  selected: false,
+}));
 
 let players = [];
-const selectedPlayerIds = new Set();
 
 const playerGrid = document.getElementById('playerGrid');
 const addPlayerForm = document.getElementById('addPlayerForm');
@@ -85,6 +92,7 @@ function sanitizePlayer(player) {
   const name = String(player.name || '').trim();
   const position = String(player.position || '').toUpperCase();
   if (!name || !POSITION_WEIGHTS[position]) return null;
+  if (!player.stats || typeof player.stats !== 'object' || Array.isArray(player.stats)) return null;
 
   const stats = {};
   for (const stat of STATS) {
@@ -98,7 +106,25 @@ function sanitizePlayer(player) {
     name,
     position,
     stats,
+    imageUrl: sanitizeImageUrl(player.imageUrl),
+    selected: Boolean(player.selected),
   };
+}
+
+function sanitizeImageUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return DEFAULT_PLAYER_IMAGE_URL;
+
+  try {
+    const parsed = new URL(raw);
+    if (['http:', 'https:'].includes(parsed.protocol)) {
+      return raw;
+    }
+  } catch {
+    return DEFAULT_PLAYER_IMAGE_URL;
+  }
+
+  return DEFAULT_PLAYER_IMAGE_URL;
 }
 
 function createPlayerCard(player, index, animateNew = false) {
@@ -112,11 +138,22 @@ function createPlayerCard(player, index, animateNew = false) {
     card.style.animationDelay = '0ms';
   }
 
-  if (selectedPlayerIds.has(player.id)) {
+  if (player.selected) {
     card.classList.add('selected');
   }
 
   card.innerHTML = `
+    <div class="card-hero">
+      <img
+        class="player-image"
+        src="${escapeHtml(player.imageUrl)}"
+        alt="${escapeHtml(
+          player.imageUrl === DEFAULT_PLAYER_IMAGE_URL ? 'Default player avatar' : `${player.name} portrait`
+        )}"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+      />
+    </div>
     <div class="card-top">
       <div class="ovr">${rating}</div>
       <div class="position-pill">${player.position}</div>
@@ -128,8 +165,15 @@ function createPlayerCard(player, index, animateNew = false) {
   `;
 
   card.addEventListener('click', () => {
-    handleSelection(player.id);
-    card.classList.toggle('selected', selectedPlayerIds.has(player.id));
+    const isSelected = handleSelection(player.id);
+    card.classList.toggle('selected', isSelected);
+  });
+
+  const imageElement = card.querySelector('.player-image');
+  imageElement.addEventListener('error', () => {
+    if (imageElement.dataset.fallbackApplied === 'true') return;
+    imageElement.dataset.fallbackApplied = 'true';
+    imageElement.src = DEFAULT_PLAYER_IMAGE_URL;
   });
 
   return card;
@@ -144,11 +188,12 @@ function renderPlayerCards({ animateNewId = null } = {}) {
 }
 
 function handleSelection(playerId) {
-  if (selectedPlayerIds.has(playerId)) {
-    selectedPlayerIds.delete(playerId);
-    return;
-  }
-  selectedPlayerIds.add(playerId);
+  const player = players.find((entry) => entry.id === playerId);
+  if (!player) return false;
+
+  player.selected = !player.selected;
+  savePlayersToLocalStorage();
+  return player.selected;
 }
 
 function shufflePlayers(list) {
@@ -197,10 +242,11 @@ function animatePreShuffle(selectedIds) {
 }
 
 function animateTeamGrouping(teamAIds, teamBIds) {
+  const selectedIds = new Set(players.filter((player) => player.selected).map((player) => player.id));
   const cards = [...document.querySelectorAll('.player-card')];
   cards.forEach((card) => {
     card.classList.remove('split-left', 'split-right');
-    if (!selectedPlayerIds.has(card.dataset.id)) return;
+    if (!selectedIds.has(card.dataset.id)) return;
 
     if (teamAIds.has(card.dataset.id)) card.classList.add('split-left');
     if (teamBIds.has(card.dataset.id)) card.classList.add('split-right');
@@ -248,6 +294,7 @@ addPlayerForm.addEventListener('submit', (event) => {
   const formData = new FormData(addPlayerForm);
   const name = String(formData.get('name') || '').trim();
   const position = String(formData.get('position') || '').toUpperCase();
+  const imageUrl = sanitizeImageUrl(formData.get('imageUrl'));
 
   const stats = {
     PAC: Number(formData.get('pac')),
@@ -280,6 +327,8 @@ addPlayerForm.addEventListener('submit', (event) => {
     name,
     position,
     stats,
+    imageUrl,
+    selected: false,
   };
 
   players = [...players, newPlayer];
@@ -291,14 +340,14 @@ addPlayerForm.addEventListener('submit', (event) => {
 });
 
 splitTeamsBtn.addEventListener('click', async () => {
-  const selectedPlayers = players.filter((player) => selectedPlayerIds.has(player.id));
+  const selectedPlayers = players.filter((player) => player.selected);
 
   if (selectedPlayers.length < 2) {
     showMessage('Select at least 2 players to split teams.', 'error');
     return;
   }
 
-  await animatePreShuffle(selectedPlayerIds);
+  await animatePreShuffle(new Set(selectedPlayers.map((player) => player.id)));
   const { teamA, teamB } = splitTeams(selectedPlayers);
   const teamAIds = new Set(teamA.map((p) => p.id));
   const teamBIds = new Set(teamB.map((p) => p.id));
